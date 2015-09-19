@@ -1,0 +1,21 @@
+--rule function
+
+create or replace function load_strategy_activity() returns setof record as
+$$
+declare
+rec1 record;
+rec2 record;
+sql "varchar";
+
+begin
+	for rec1 in execute 'select rule_name, rule_register_id from activity_register;' loop
+		for rec2 in execute 'select rule_table_name, activity_table_name from rule_register where id = '''|| rec1.rule_register_id ||''';' loop
+		
+			return next rec2;
+		end loop;
+	end loop;
+return;
+end
+$$
+
+language 'plpgsql';

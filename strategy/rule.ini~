@@ -1,0 +1,124 @@
+促销规则表
+
+1.1 促销活动规则登记表
+表id	促销规则表名	促销活动表名
+
+create table rule_register(id serial, rule_table_name text, activity_table_name text);
+alter table rule_register add primary key(id);
+
+insert into rule_register(rule_table_name, activity_table_name, startdate, enddate, flag) values('set_rule', 'set_activity');
+insert into rule_register(rule_table_name, activity_table_name, startdate, enddate, flag) values('rate_rule', 'rate_activity');
+insert into rule_register(rule_table_name, activity_table_name, startdate, enddate, flag) values('secondpiecerate_rule', 'secondpiecerate_activity');
+insert into rule_register(rule_table_name, activity_table_name, startdate, enddate, flag) values('returncash_rule', 'returncash_activity');
+
+1.2 促销活动登记表
+表id	促销活动名	促销活动规则登记表id	开始时间	结束时间	可用标志(1可用/0不可用)
+
+create table activity_register(id serial, rule_name text, rule_register_id int);
+alter table activity_register add primary key(id);
+alter table activity_register add foreign key(rule_register_id) references rule_register(id);
+
+insert into activity_register(rule_name, rule_register_id) values('套餐1', 1);
+
+
+(注意:以下的规则表和活动表的添加,必须对应地在促销活动登记表中登记,不然对于系统来说不可见)
+查询规则:根据促销活动登记表查询登记的促销规则列表,选择促销规则,列出其对应的促销活动表名. 
+如该规则可用,并且在开始时间和结束时间之间,便使用促销规则表名及促销活动表名,在存储过程中拼接
+成对应的表操作.
+
+当要新加入一个规则时, 建立对应的规则表和活动表, 然后把对应的规则表名和活动表名注册到rule_register表中;
+当要新加入一个活动时, 在对应的规则的对应的活动表中添加该活动, 并且要相应地在促销活动登记表activity_register中登记该活动.
+
+2.1 套餐促销规则表
+--说明: 套餐规则适用与几个商品一起可以指定特价出售的情况.
+
+表id	套餐名		套餐价格	
+
+create table set_rule(id serial, name text, price numeric(8,2), startdate date, enddate date, flag int, priority int);
+alter table set_rule add primary key(id);
+
+insert into set_rule values(1,'套餐1',20, current_date, current_date+1000, 1, 4);
+insert into set_rule values(2,'套餐2',50, current_date, current_date+1000, 1, 4);
+insert into set_rule values(3,'套餐3',40, current_date, current_date+1000, 1, 4);
+insert into set_rule values(4,'霸王套餐',50, current_date, current_date+1000, 1, 4);
+insert into set_rule values(5,'究极套餐',250, current_date, current_date+1000, 1, 4);
+
+2.2 套餐促销活动表
+表id	套餐规则表id	参加活动商品id
+
+create table set_activity(id serial, setrule_id int, product_id int);
+alter table set_activity add primary key(id);
+alter table set_activity add foreign key(setrule_id) references set_rule(id);
+
+insert into set_activity values(1, 1, 1);
+insert into set_activity values(2, 1, 2);
+insert into set_activity values(3, 1, 3);
+insert into set_activity values(4, 1, 4);
+
+3.1 单品折扣规则表
+--说明:单品折扣适用于对没一件需要打折的商品作出折扣设置.
+
+表id	规则名		折扣
+
+create table rate_rule(id serial, name text, rate numeric(8,2), startdate date, enddate date, flag int, priority int);
+alter table rate_rule add primary key(id);
+
+3.2 单品折扣活动表
+表id	单品规则折扣表id	参加活动商品id
+
+create table rate_activity(id serial, raterule_id int, product_id int);
+alter table rate_activity add primary key(id);
+alter table rate_activity add foreign key(raterule_id) references rate_rule(id);
+
+4.1 第二件折扣规则表
+表id	规则名		折扣
+
+create table secondpiecerate_rule(id serial, name text, rate numeric(8,2), startdate date, enddate date, flag int, priority int);
+alter table secondpiecerate_rule add primary key(id);
+
+4.2 第二件折扣活动表
+表id	第二件折扣规则表id	参加活动商品id	
+
+create table secondpiecerate_activity(id serial, raterule_id int, product_id int);
+alter table secondpiecerate_activity add primary key(id);
+alter table secondpiecerate_activity add foreign key(raterule_id) references secondpiecerate_rule(id);
+
+5.1 满多少返多少规则表
+表id	规则名		满多少		返回多少
+
+create table returncash_rule(id serial, name text, condition_cash numeric(8,2), return_cash numeric(8,2), startdate date, enddate date, flag int, priority int);
+alter table returncash_rule add primary key(id);
+
+5.2 满多少返多少活动表
+表id	满多少返多少规则表	参加活动商品id
+
+create table returncash_activity(id serial, returncashrule_id int, product_id int);
+alter table returncash_activity add primary key(id);
+alter table returncash_activity add foreign key(returncashrule_id) references returncash_rule(id);
+
+6. 测试用的简单商品表
+//goods
+create table goods(id serial, name text not null, sale_price numeric(16,2) not null);
+alter table goods add primary key(id);
+
+insert into goods values(1,'萝卜', 10);
+insert into goods values(2,'芹菜', 11);
+insert into goods values(3,'辣椒', 4);
+insert into goods values(4,'苹果', 12);
+insert into goods values(5,'勺子', 10);
+insert into goods values(6,'杯子', 11);
+insert into goods values(7,'被子', 4);
+insert into goods values(8,'枕头', 12);
+insert into goods values(9,'王老吉', 10);
+insert into goods values(10,'雪梨', 11);
+insert into goods values(11,'铅笔', 4);
+insert into goods values(12,'橡皮', 12);
+
+
+相关难题:
+1 多个促销活动是否允许重复使用,如果做;
+2 促销活动是自动在扫描完商品的时候检测, 还是由收银员选择活动并检查;
+3 促销活动的商品如何计算出售价格, 如何记录在销售记录中标记促销活动;
+
+4 如果需要不断添加新的促销活动,如何保证代码的易扩展性, 遵守开闭原则;
+5 如何在数据库中反映这些规则.
